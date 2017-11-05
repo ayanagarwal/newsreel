@@ -2,6 +2,7 @@ import time       #Importing the time library to check the time of code executio
 import sys    #Importing the System Library
 import os
 import socket
+import newspaper
 
 from flask import Flask
 from flask import request
@@ -30,10 +31,49 @@ app = Flask(__name__)
 def server():
 	t0 = time.time()   #start the timer
 	content = request.args.get('content')
+	domain = request.args.get('domain')
+	limit = request.args.get('limit')
 	if (content):
+		print("Getting Image Content")
 		return get_content_url(content)
+	elif (domain):
+		print("Getting Domain Articles")
+		if (limit):
+			return get_domain_content(domain, limit)
+		return get_domain_content(domain, 10)
 
 	return ''
+
+
+
+def get_domain_content(domain, limit=10):
+	print(domain)
+	database = newspaper.build(domain)
+	result = {}
+	count = 0
+	articles = [article for article in database.articles]
+	result['article_count'] = len(articles)
+	result['article_limit'] = limit
+	result['article_domain'] = domain
+	result['articles'] = []
+	for a in articles:
+		data = {}
+		a.download()
+		a.parse()
+		a.nlp()
+		data['authors'] = a.authors
+		data['publish_date'] = a.publish_date
+		data['content'] = a.text
+		data['top_image'] = a.top_image
+		data['movies'] = a.movies
+		data['keywords'] = a.keywords
+		data['summary'] = a.summary
+		data['url'] = a.url
+		result['articles'].append(data)
+		count += 1
+		if (count > limit):
+			break
+	return jsonify(result)
 
 
 
@@ -54,9 +94,9 @@ def get_content_url(content):
 			k+=1
 	
 	if (items):
-		return jsonify({'url':items[k]})
+		return jsonify({'image':items[k]})
 	else:
-		return jsonify({'url':''})
+		return jsonify({'image':''})
 
 
 
