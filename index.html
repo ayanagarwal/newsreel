@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Newsreel</title>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.0/css/bulma.min.css">
+	<script type="text/javascript" src="./turnjs4/extras/modernizr.2.5.3.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Bangers" rel="stylesheet">
+	<style type="text/css">
+
+		html, body {
+			margin: 0;
+			padding: 0;
+			background: #EEEEEE;
+		}
+		
+		.heading {
+			font-family: "Bangers" !important;
+			color: black;
+		}
+
+		.text {
+			font-family: "Bangers" !important;
+			color: black;
+			font-size: 18px;
+		}
+
+		#magazine{
+			width: 960px;
+			height: 700px;
+			margin: 0 auto;
+		}
+
+		#magazine .page{
+			padding: 20px;
+			background-color: white;
+			overflow-y: scroll;
+		}
+
+		.comic-holder {
+			padding: 0.125rem !important;
+		}
+
+		.comic-holder .heading {
+			margin-top: 30px;
+		}
+
+		.tile.pane-holder {
+			margin: 0 auto !important;
+			padding: 0.0725rem 20px !important;
+		}
+
+		.tile.pane {
+			margin: 0.125rem !important;
+			display: flex;
+			flex-direction: column;
+			border: 2px solid black;
+		}
+
+		.comic-caption {
+			background: white;
+			color: black;
+			padding: 0.5rem;
+			height: auto;
+			flex-grow: 1;
+		}
+
+		.light-red {
+			background: #DE6B6F;
+		}
+
+		.light-yellow {
+			background: #FAE669;
+		}
+
+		.light-blue {
+			background: #75BEE7;
+		}
+
+		.is-grayscale {
+			/*filter: grayscale(100%);*/
+		}
+
+	</style>
+</head>
+<body>
+
+	<section id="form" class="section">
+		<div class="container">
+			<div class="content">
+				<h1 class="title is-1">Enter News Links</h1>
+				<textarea id="urls" class="textarea"></textarea>
+				<br>
+				<button id="submit" class="button is-primary">Submit</button>
+				<button id="load" class="button is-primary is-outlined">Load</button>
+			</div>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="container">
+			<div id="magazine"></div>
+		</div>
+	</section>
+
+	<script src="https://www.gstatic.com/firebasejs/4.6.1/firebase.js"></script>
+	<script type="text/javascript" src="sample-comic.js"></script>
+	<script type="text/javascript">
+
+		let config = {
+			apiKey: "AIzaSyCsTL7ZOxNOAUByHQVgGAUIW6OcjXbaCDQ",
+			authDomain: "borkedin.firebaseapp.com",
+			databaseURL: "https://borkedin.firebaseio.com",
+			projectId: "borkedin",
+			storageBucket: "borkedin.appspot.com",
+			messagingSenderId: "769825906375"
+		};
+		let FirebaseApp = firebase.initializeApp(config);
+		let db = FirebaseApp.database();
+
+		function getURLHash(url) {
+			let hash = url.split('//')[1].split('?')[0].replace(/\W+/g, '');
+			return hash;
+		}
+
+		function renderComic(comic) {
+
+			if (!comic) {
+				let div = document.createElement('div');
+					div.innerHTML = `<p>Such is life.</p>`;
+					return div;
+			}
+
+			let output = document.createElement('div');
+				output.classList.add('comic-holder');
+				
+			let tileSizes = ['is-5', 'is-7', 'is-7', 'is-5'];
+			let tileClasses = ['light-blue', 'light-yellow', 'light-red'];
+			let panesPerLine = 2;
+
+			console.log(comic);
+
+			let parent = false;
+
+			let h = document.createElement('h2');
+				h.classList.add('title');
+				h.classList.add('heading');
+				h.classList.add('is-2');
+				h.classList.add('has-text-centered');
+				h.innerText = comic.title;
+			output.appendChild(h);
+
+			comic.sentences.sort((a, b) => {
+				return a.order - b.order;
+			}).forEach((pane, idx) => {
+
+				console.log(pane);
+
+				let tileClass = tileClasses[idx % tileClasses.length];
+
+				let html = `
+					<img class="is-grayscale" src="${pane.image}">
+					<div class="comic-caption ${tileClass}">
+						<p class="text">${pane.content}</p>
+					</div>
+					
+				`;
+				let div = document.createElement('div');
+					div.classList.add('tile');
+					div.classList.add('is-child');
+					div.classList.add('pane');
+				let tileSize = tileSizes[idx % tileSizes.length];
+					div.classList.add(tileSize);
+					div.innerHTML = html;
+
+				if (idx % panesPerLine === 0) {
+					if (parent) {
+						output.appendChild(parent);
+					}
+					parent = document.createElement('div');
+					parent.classList.add('tile');
+					parent.classList.add('is-parent');
+					parent.classList.add('pane-holder');
+				}
+
+				parent.appendChild(div);
+
+			});
+
+			output.appendChild(parent);
+
+			let btnDiv = document.createElement('div');
+				btnDiv.innerHTML = `
+					<button data-action="save" class="button is-primary">Save Comic</button>
+				`;
+			output.appendChild(btnDiv);
+
+
+			return output;
+		}
+
+		function renderMagazine(comics) {
+			let comicMap = {};
+			let magazine = document.getElementById('magazine');
+			comics.forEach((comic, cidx) => {
+				console.log(comic)
+				let div = renderComic(comic);
+				magazine.appendChild(div);
+				let btn = div.querySelector('[data-action="save"]');
+				console.log(div)
+				btn.dataset.comic = cidx;
+				comicMap[cidx] = comic;
+			});
+			$('#magazine').turn({
+				elevation: 50,
+				gradients: true,
+				autoCenter: true,
+				acceleration: true
+			});
+			Array.from(magazine.querySelectorAll('[data-action="save"]')).forEach((btn) => {
+				btn.addEventListener('click', (e) => {
+					let cidx = parseInt(btn.dataset.comic, 10);
+					let comic = comicMap[cidx];
+					console.log(comic);
+					let hash = getURLHash(comic.url);
+					console.log(hash);
+					db.ref(`newsreel/comics/${hash}`).set(comic);
+				});
+			});
+		}
+
+		function showMagazine(urls) {
+			let reqs = [];
+			urls.forEach((url) => {
+				let p = getComicByURL({
+					url: url,
+					images: true
+				});
+				p.url = url;
+				reqs.push(p);
+			});
+			Promise.all(reqs).then((comics) => {
+				let list = comics.map((comic, cidx) => {
+					let meta = reqs[cidx];
+					delete comic.content;
+					comic.url = meta.url;
+					return comic;
+				});
+				renderMagazine(list);
+			}).catch(console.error);
+		}
+
+		function main() {
+
+			let form = document.getElementById('form');
+			let textarea = document.getElementById('urls');
+			let button = document.getElementById('submit');
+			let load = document.getElementById('load');
+
+			button.addEventListener('click', (e) => {
+				let urls = textarea.value.split('\n');
+				showMagazine(urls);
+				form.style.display = 'none';
+			});
+
+			load.addEventListener('click', (e) => {
+				db.ref(`newsreel/comics`).once('value', (snap) => {
+					let val = snap.val();
+					let comics = Object.keys(val).map((key) => val[key]);
+					renderMagazine(comics);
+					form.style.display = 'none';
+				});
+			});
+
+		}
+
+		yepnope({
+			test : Modernizr.csstransforms,
+			yep: ['./turnjs4/lib/turn.js'],
+			nope: ['./turnjs4/lib/turn.html4.min.js'],
+			both: ['./turnjs4/samples/basic/css/basic.css'],
+			complete: main
+		});
+
+	</script>
+
+</body>
+</html>
