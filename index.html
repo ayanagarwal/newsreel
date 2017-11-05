@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>Newsreel</title>
+	<link rel="icon" sizes="192x192" href="./favicon.png">
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,9 +31,9 @@
 		}
 
 		#magazine{
-			width: 960px;
+			/*width: 960px;
 			height: 700px;
-			margin: 0 auto;
+			margin: 0 auto;*/
 		}
 
 		#magazine .page{
@@ -162,8 +163,11 @@
 
 				let tileClass = tileClasses[idx % tileClasses.length];
 
-				let html = `
-					<img class="is-grayscale" src="${pane.image}">
+				let html = ``
+				if (pane.image) {
+					html += `<img class="is-grayscale" src="${pane.image}">`;
+				}
+				html += `
 					<div class="comic-caption ${tileClass}">
 						<p class="text">${pane.content}</p>
 					</div>
@@ -216,9 +220,10 @@
 				comicMap[cidx] = comic;
 			});
 			$('#magazine').turn({
+				height: 600,
+				width: 400,
 				elevation: 50,
 				gradients: true,
-				autoCenter: true,
 				acceleration: true
 			});
 			Array.from(magazine.querySelectorAll('[data-action="save"]')).forEach((btn) => {
@@ -267,14 +272,14 @@
 				form.style.display = 'none';
 			});
 
-			load.addEventListener('click', (e) => {
+			//load.addEventListener('click', (e) => {
 				db.ref(`newsreel/comics`).once('value', (snap) => {
 					let val = snap.val();
 					let comics = Object.keys(val).map((key) => val[key]);
 					renderMagazine(comics);
 					form.style.display = 'none';
 				});
-			});
+			//});
 
 		}
 
