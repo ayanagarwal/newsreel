@@ -18,10 +18,6 @@
 			padding: 0;
 			background: #EEEEEE;
 		}
-
-		.is-bold {
-			font-weight: bold !important;
-		}
 		
 		.is-hidden {
 			display: none !important;
@@ -136,105 +132,32 @@
 		  }
 		}
 
-		.is-source {
-			height: auto !important;
-			border: none;
-			outline: none;
-			padding: 20px;
-			margin: 10px;
-		}
-
-		.is-source img {
-			height: 120px;
-			width: 120px;
-		}
-
-		.is-source:hover {
-			background: black;
-		}
-
-		.is-source:hover img {
-			filter: invert();
-		}
-
-		.section {
-			padding-top: 1.5rem !important;
-		}
-
-		.min-margin-top {
-			padding-top: 0 !important;
-		}
-
-		.min-margin-top .button {
-			margin-top: 20px;
-		}
-
 	</style>
 </head>
 <body>
 
-	<section id="choose" class="section">
+	<section id="form" class="section">
 		<div class="container">
 			<div class="content">
-				<h1 class="title is-1 is-bold">Newsreel</h1>
-				<h2 class="subtitle is-3">Browse News Sources</h2>
-				<hr>
-				<a href="./#/al-jazeera-english" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.aljazeera.com&size=70..120..200">
-				</a>
-				<a href="./#/associated-press" class="button is-source">
-					<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Associated_Press_logo_2012.svg/1000px-Associated_Press_logo_2012.svg.png">
-				</a>
-				<a href="./#/bbc-news" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.bbc.co.uk/news&size=70..120..200">
-				</a>
-				<a href="./#/bloomberg" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.bloomberg.com&size=70..120..200">
-				</a>
-				<a href="./#/breitbart-news" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.breitbart.com&size=70..120..200">
-				</a>
-				<a href="./#/buzzfeed" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=https://www.buzzfeed.com&size=70..120..200">
-				</a>
-				<a href="./#/cnn" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=https://www.cnn.com&size=70..120..200">
-				</a>
-				<a href="./#/espn" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://espn.go.com&size=70..120..200">
-				</a>
-				<a href="./#/hacker-news" class="button is-source">
-					<img src="https://news.ycombinator.com/favicon.ico">
-				</a>
-				<a href="./#/the-huffington-post" class="button is-source">
-					<img src="https://jerz.setonhill.edu/wp-content/uploads/2013/12/image6.jpg">
-				</a>
-				<a href="./#/the-new-york-times" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.nytimes.com&size=70..120..200">
-				</a>
-				<a href="./#/reuters" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.reuters.com&size=70..120..200">
-				</a>
-				<a href="./#/techcrunch" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=https://techcrunch.com&size=70..120..200">
-				</a>
-				<a href="./#/the-wall-street-journal" class="button is-source">
-					<img src="https://icons.better-idea.org/icon?url=http://www.wsj.com&size=70..120..200">
-				</a>
-				<hr>
-				<p class="subtitle is-6 has-text-right">Powered by <a href="https://newsapi.org/" class="tag">News API</a></p>
+				<h1 class="title is-1">Enter News Links</h1>
+				<textarea id="urls" class="textarea"></textarea>
+				<br>
+				<button id="submit" class="button is-primary">Submit</button>
+				<button id="load" class="button is-primary is-outlined">Load</button>
 			</div>
 		</div>
 	</section>
 
-	<section class="section min-margin-top">
+	<section class="section">
 		<div class="container">
-			<a href="./#/" class="button is-info is-outlined">Home</a>
-			<div id="magazine-holder"></div>
+			<div id="loader" class="spinner is-hidden">
+			  <div class="double-bounce1"></div>
+			  <div class="double-bounce2"></div>
+			</div>
+			<div id="magazine"></div>
 		</div>
 	</section>
 
-	<script type="text/javascript" src="https://rawgit.com/flatiron/director/master/build/director.min.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/4.6.1/firebase.js"></script>
 	<script type="text/javascript" src="./sample-comic.js"></script>
 	<script type="text/javascript">
@@ -326,15 +249,7 @@
 
 			let btnDiv = document.createElement('div');
 				btnDiv.innerHTML = `
-					<div class="field is-grouped is-grouped-centered">
-						<p class="control">
-							<button data-action="save" class="button is-info">Save Comic</button>
-						</p>
-						<p class="control">
-							<a href="${comic.url}" target="blank_" class="button is-info is-outlined">View Article</a>
-						</p>
-					</div>
-					<br>
+					<button data-action="save" class="button is-primary">Save Comic</button>
 				`;
 			output.appendChild(btnDiv);
 
@@ -347,8 +262,6 @@
 
 		function renderMagazine(comics, loader) {
 			let comicMap = {};
-			let mHolder = document.getElementById('magazine-holder');
-				mHolder.innerHTML = `<div id="magazine"></div>`;
 			let magazine = document.getElementById('magazine');
 			comics.forEach((comic, cidx) => {
 				let div = renderComic(comic);
@@ -375,44 +288,51 @@
 			}
 		}
 
-		function showSource(source) {
-			let loader = document.getElementById('choose');
-			db.ref(`newsreel/digests/${source}`).once('value', (snap) => {
-				let map = snap.val() || {};
-				console.log(map);
-				let comics = Object.keys(map).map((key) => map[key]);
-				renderMagazine(comics, loader);
+		function showMagazine(urls, loader) {
+			let reqs = [];
+			urls.forEach((url) => {
+				let p = getComicByURL({
+					url: url,
+					images: true
+				});
+				p.url = url;
+				reqs.push(p);
 			});
+			Promise.all(reqs).then((comics) => {
+				let list = comics.filter((c) => c).map((comic, cidx) => {
+					let meta = reqs[cidx];
+					comic.content = null;
+					comic.url = meta.url;
+					return comic;
+				});
+				renderMagazine(list, loader);
+			}).catch(console.error);
 		}
 
 		function main() {
 
-			let routes = {
+			let form = document.getElementById('form');
+			let textarea = document.getElementById('urls');
+			let button = document.getElementById('submit');
+			let load = document.getElementById('load');
+			let loader = document.getElementById('loader');
 
-				'/': () => {
-					let loader = document.getElementById('choose');
-					loader.classList.remove('is-hidden');
-					let mHolder = document.getElementById('magazine-holder');
-					mHolder.innerHTML = `<div id="magazine"></div>`;
-				},
+			button.addEventListener('click', (e) => {
+				let urls = textarea.value.split('\n');
+				showMagazine(urls, loader);
+				form.style.display = 'none';
+				loader.classList.remove('is-hidden');
+			});
 
-				'/:source': (source) => {
-					showSource(source);
-				}
-
-			}
-
-			let router = Router(routes);
-			router.init();
-
-			let loader = document.getElementById('choose');
-
-			/*Array.from(document.querySelectorAll('[data-source')).forEach((btn) => {
-				btn.addEventListener('click', (e) => {
-					let source = btn.dataset.source;
-					showSource(source);
+			load.addEventListener('click', (e) => {
+				form.style.display = 'none';
+				loader.classList.remove('is-hidden');
+				db.ref(`newsreel/comics`).once('value', (snap) => {
+					let val = snap.val();
+					let comics = Object.keys(val).map((key) => val[key]);
+					renderMagazine(comics, loader);
 				});
-			});*/
+			});
 
 		}
 
