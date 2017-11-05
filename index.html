@@ -207,14 +207,17 @@
 				<a href="./#/espn" class="button is-source">
 					<img src="https://icons.better-idea.org/icon?url=http://espn.go.com&size=70..120..200">
 				</a>
-				<a href="./#/hacker-news" class="button is-source">
-					<img src="https://news.ycombinator.com/favicon.ico">
-				</a>
 				<a href="./#/the-guardian-uk" class="button is-source">
 					<img src="https://icons.better-idea.org/icon?url=https://www.theguardian.com/uk&size=70..120..200">
 				</a>
+				<a href="./#/hacker-news" class="button is-source">
+					<img src="https://news.ycombinator.com/favicon.ico">
+				</a>
 				<a href="./#/the-huffington-post" class="button is-source">
 					<img src="https://jerz.setonhill.edu/wp-content/uploads/2013/12/image6.jpg">
+				</a>
+				<a href="./#/the-times-of-india" class="button is-source">
+					<img src="http://is5.mzstatic.com/image/thumb/Purple49/v4/4d/1a/00/4d1a00a3-c7d9-d1a5-de18-0f2c4db62362/source/1200x630bb.jpg">
 				</a>
 				<a href="./#/the-new-york-times" class="button is-source">
 					<img src="https://icons.better-idea.org/icon?url=http://www.nytimes.com&size=70..120..200">
@@ -225,11 +228,17 @@
 				<a href="./#/techcrunch" class="button is-source">
 					<img src="https://icons.better-idea.org/icon?url=https://techcrunch.com&size=70..120..200">
 				</a>
+				<a href="./#/usa-today" class="button is-source">
+					<img src="https://www.gannett-cdn.com/GDContent/applogos/usatoday.png">
+				</a>
 				<a href="./#/the-wall-street-journal" class="button is-source">
 					<img src="https://icons.better-idea.org/icon?url=http://www.wsj.com&size=70..120..200">
 				</a>
 				<a href="./#/newsreel" class="button is-source">
 					<img src="./favicon.png">
+				</a>
+				<a href="./#/curate" class="button is-source">
+					<img src="./add.png">
 				</a>
 				<hr>
 				<p class="subtitle is-6 has-text-right">Powered by <a href="https://newsapi.org/" class="tag">News API</a></p>
@@ -409,6 +418,10 @@
 					loader.classList.remove('is-hidden');
 					let mHolder = document.getElementById('magazine-holder');
 					mHolder.innerHTML = `<div id="magazine"></div>`;
+				},
+
+				'/curate': () => {
+					window.location = './curate.html';
 				},
 
 				'/:source': (source) => {
