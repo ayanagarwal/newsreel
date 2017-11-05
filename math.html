@@ -136,42 +136,25 @@
 </head>
 <body>
 
-	<section id="form" class="section">
-		<div class="container">
-			<div class="content">
-				<h1 class="title is-1">Enter News Links</h1>
-				<textarea id="urls" class="textarea"></textarea>
-				<br>
-				<button id="submit" class="button is-primary">Submit</button>
-				<button id="load" class="button is-primary is-outlined">Load</button>
-			</div>
-		</div>
-	</section>
-
 	<section class="section">
-		<div class="container">
-			<div id="loader" class="spinner is-hidden">
-			  <div class="double-bounce1"></div>
-			  <div class="double-bounce2"></div>
+		<div class="content">
+			<div class="columns">
+				<div id="r1" class="column is-4">
+					<h2 class="title is-4">Node-Summary</h2>
+				</div>
+				<div id="r2" class="column is-4">
+					<h2 class="title is-4">Jaccard</h2>
+				</div>
+				<div id="r3" class="column is-4">
+					<h2 class="title is-4">Subject</h2>
+				</div>
 			</div>
-			<div id="magazine"></div>
 		</div>
 	</section>
 
 	<script src="https://www.gstatic.com/firebasejs/4.6.1/firebase.js"></script>
 	<script type="text/javascript" src="./sample-comic.js"></script>
 	<script type="text/javascript">
-
-		let config = {
-			apiKey: "AIzaSyCsTL7ZOxNOAUByHQVgGAUIW6OcjXbaCDQ",
-			authDomain: "borkedin.firebaseapp.com",
-			databaseURL: "https://borkedin.firebaseio.com",
-			projectId: "borkedin",
-			storageBucket: "borkedin.appspot.com",
-			messagingSenderId: "769825906375"
-		};
-		let FirebaseApp = firebase.initializeApp(config);
-		let db = FirebaseApp.database();
 
 		function getURLHash(url) {
 			let hash = url.split('//')[1].split('?')[0].replace(/\W+/g, '');
@@ -193,8 +176,6 @@
 			let tileClasses = ['light-blue', 'light-yellow', 'light-red'];
 			let panesPerLine = 2;
 
-			console.log(comic);
-
 			let parent = false;
 
 			let h = document.createElement('h2');
@@ -208,8 +189,6 @@
 			comic.sentences.sort((a, b) => {
 				return a.order - b.order;
 			}).forEach((pane, idx) => {
-
-				console.log(pane);
 
 				let tileClass = tileClasses[idx % tileClasses.length];
 
@@ -253,96 +232,82 @@
 				`;
 			output.appendChild(btnDiv);
 
-			let imgs = Array.from(output.querySelectorAll('img'));
-			console.log(imgs)
-			//COMIC.magic(imgs);
-
 			return output;
 		}
 
-		function renderMagazine(comics, loader) {
-			let comicMap = {};
-			let magazine = document.getElementById('magazine');
-			comics.forEach((comic, cidx) => {
-				let div = renderComic(comic);
-				magazine.appendChild(div);
-				let btn = div.querySelector('[data-action="save"]');
-				btn.dataset.comic = cidx;
-				comicMap[cidx] = comic;
+		function renderComicSummary(comic) {
+			let html = ``;
+			comic.sentences.forEach((s, i) => {
+				html += `<p class="subtitle is-6">${s.order}. [${s.index}] ${s.content}</p><hr>`;
 			});
-			$('#magazine').turn({
-				elevation: 50,
-				gradients: true,
-				acceleration: true
-			});
-			Array.from(magazine.querySelectorAll('[data-action="save"]')).forEach((btn) => {
-				btn.addEventListener('click', (e) => {
-					let cidx = parseInt(btn.dataset.comic, 10);
-					let comic = comicMap[cidx];
-					let hash = getURLHash(comic.url);
-					db.ref(`newsreel/comics/${hash}`).set(comic);
-				});
-			});
-			if (loader) {
-				loader.classList.add('is-hidden');
-			}
+			let div = document.createElement('div');
+				div.innerHTML = html;
+			return div;
 		}
 
-		function showMagazine(urls, loader) {
-			let reqs = [];
-			urls.forEach((url) => {
-				let p = getComicByURL({
-					url: url,
-					images: true
-				});
-				p.url = url;
-				reqs.push(p);
+		const SERVER_URL = "https://clever-garage.glitch.me";
+
+		function getComicFromArticle(article, method) {
+			return new Promise((resolve, reject) => {
+				article.method = method;
+				$.get(`${SERVER_URL}/comic`, article).then((res) => {
+					console.log(res);
+					resolve(res.data);
+				}).catch(reject);
 			});
-			Promise.all(reqs).then((comics) => {
-				let list = comics.filter((c) => c).map((comic, cidx) => {
-					let meta = reqs[cidx];
-					comic.content = null;
-					comic.url = meta.url;
-					return comic;
-				});
-				renderMagazine(list, loader);
-			}).catch(console.error);
+		}
+
+		function getArticleByURL(url) {
+			return new Promise((resolve, reject) => {
+				$.get(`${SERVER_URL}/article`, {
+					url: url
+				}).then((res) => {
+					console.log(res);
+					resolve(res.data);
+				}).catch(reject);
+			});
 		}
 
 		function main() {
 
-			let form = document.getElementById('form');
-			let textarea = document.getElementById('urls');
-			let button = document.getElementById('submit');
-			let load = document.getElementById('load');
-			let loader = document.getElementById('loader');
+			let r1 = document.getElementById('r1');
+			let r2 = document.getElementById('r2');
+			let r3 = document.getElementById('r3');
 
-			button.addEventListener('click', (e) => {
-				let urls = textarea.value.split('\n');
-				showMagazine(urls, loader);
-				form.style.display = 'none';
-				loader.classList.remove('is-hidden');
-			});
+			let url = prompt("URL");//`https://www.nytimes.com/2017/11/05/world/asia/trump-asia-japan-korea.html`;
 
-			load.addEventListener('click', (e) => {
-				form.style.display = 'none';
-				loader.classList.remove('is-hidden');
-				db.ref(`newsreel/comics`).once('value', (snap) => {
-					let val = snap.val();
-					let comics = Object.keys(val).map((key) => val[key]);
-					renderMagazine(comics, loader);
+			getArticleByURL(url).then((comic) => {
+
+				comic.url = url;
+
+				getComicByURL({
+					url: comic.url
+				}).then((data) => {
+					let d1 = renderComicSummary(data);
+					r1.appendChild(d1);
 				});
+
+				getComicByURL({
+					url: comic.url,
+					method: 'jaccard'
+				}).then((data) => {
+					let d2 = renderComicSummary(data);
+					r2.appendChild(d2);
+				});
+
+				getComicByURL({
+					url: comic.url,
+					method: 'subject'
+				}).then((data) => {
+					let d3 = renderComicSummary(data);
+					r3.appendChild(d3);
+				});
+
 			});
 
 		}
 
-		yepnope({
-			test : Modernizr.csstransforms,
-			yep: ['./turnjs4/lib/turn.js'],
-			nope: ['./turnjs4/lib/turn.html4.min.js'],
-			both: ['./turnjs4/samples/basic/css/basic.css'],
-			complete: main
-		});
+		main();
 
 	</script>
 

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Newsreel</title>
+	<link rel="icon" sizes="192x192" href="./favicon.png">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.0/css/bulma.min.css">
+	<script type="text/javascript" src="./turnjs4/extras/modernizr.2.5.3.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Bangers" rel="stylesheet">
+	<style type="text/css">
+
+		html, body {
+			margin: 0;
+			padding: 0;
+			background: #EEEEEE;
+		}
+		
+		.is-hidden {
+			display: none !important;
+		}
+
+		.heading {
+			font-family: "Bangers" !important;
+			color: black;
+		}
+
+		.text {
+			font-family: "Bangers" !important;
+			color: black;
+			font-size: 18px;
+		}
+
+		#magazine{
+			width: 960px;
+			height: 700px;
+			margin: 0 auto;
+		}
+
+		#magazine .page{
+			padding: 20px;
+			background-color: white;
+			overflow-y: scroll;
+		}
+
+		.comic-holder {
+			padding: 0.125rem !important;
+		}
+
+		.comic-holder .heading {
+			margin-top: 30px;
+		}
+
+		.tile.pane-holder {
+			margin: 0 auto !important;
+			padding: 0.0725rem 20px !important;
+		}
+
+		.tile.pane {
+			margin: 0.125rem !important;
+			display: flex;
+			flex-direction: column;
+			border: 2px solid black;
+		}
+
+		.comic-caption {
+			background: white;
+			color: black;
+			padding: 0.5rem;
+			height: auto;
+			flex-grow: 1;
+		}
+
+		.light-red {
+			background: #DE6B6F;
+		}
+
+		.light-yellow {
+			background: #FAE669;
+		}
+
+		.light-blue {
+			background: #75BEE7;
+		}
+
+		.is-grayscale {
+			/*filter: grayscale(100%);*/
+		}
+
+		.spinner {
+		  width: 40px;
+		  height: 40px;
+
+		  position: relative;
+		  margin: 100px auto;
+		}
+
+		.double-bounce1, .double-bounce2 {
+		  width: 100%;
+		  height: 100%;
+		  border-radius: 50%;
+		  background-color: #333;
+		  opacity: 0.6;
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  
+		  -webkit-animation: sk-bounce 2.0s infinite ease-in-out;
+		  animation: sk-bounce 2.0s infinite ease-in-out;
+		}
+
+		.double-bounce2 {
+		  -webkit-animation-delay: -1.0s;
+		  animation-delay: -1.0s;
+		}
+
+		@-webkit-keyframes sk-bounce {
+		  0%, 100% { -webkit-transform: scale(0.0) }
+		  50% { -webkit-transform: scale(1.0) }
+		}
+
+		@keyframes sk-bounce {
+		  0%, 100% { 
+		    transform: scale(0.0);
+		    -webkit-transform: scale(0.0);
+		  } 50% { 
+		    transform: scale(1.0);
+		    -webkit-transform: scale(1.0);
+		  }
+		}
+
+	</style>
+</head>
+<body>
+
+	<section class="section">
+		<div class="content">
+			<div class="columns">
+				<div id="r1" class="column is-4">
+					<h2 class="title is-4">Node-Summary</h2>
+				</div>
+				<div id="r2" class="column is-4">
+					<h2 class="title is-4">Jaccard</h2>
+				</div>
+				<div id="r3" class="column is-4">
+					<h2 class="title is-4">Subject</h2>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script src="https://unpkg.com/compromise/builds/compromise.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/4.6.1/firebase.js"></script>
+	<script type="text/javascript" src="./sample-comic.js"></script>
+	<script type="text/javascript">
+
+			function cleanString(str, rep) {
+				return str.replace(/\W+/g, rep);
+			}
+
+			function getJaccardSimilarity(centroid, doc) {
+				let union = [];
+				let intersection = [];
+				doc.forEach((word) => {
+					union.push(word);
+				});
+				centroid.forEach((word) => {
+					if (union.indexOf(word) < 0) {
+						union.push(word);
+					}
+					if (doc.indexOf(word) > -1) {
+						intersection.push(word);
+					}
+				});
+				let sim = intersection.length / union.length;
+				return sim;
+			}
+
+			function getShinglesSimilarity(centroid, doc) {
+
+			}
+
+			function getTopicsTags(objList) {
+				let topics = objList.map((obj) => {
+					return Object.keys(obj).map((key) => obj[key])[0];
+				});
+				//console.log(topics);
+				return topics;
+			}
+
+			function getSubjectSimilarity(centroid, doc) {
+				let sim = getJaccardSimilarity(centroid, doc);
+				return 1 - sim;
+			}
+
+			function cluster(article, options) {
+
+				let kLimit = options.k || 6;
+				let getSimilarity = options.getSimilarity || getJaccardSimilarity;
+
+				let full = article.content;
+
+				let fullText = full.replace(/\n/g, ' ');
+				let charList = fullText.split('');
+				let lines = [];
+				let line = '';
+				//charList.forEach((char, idx) => {
+				for (let idx = 0; idx < charList.length; idx++) {
+					let char = charList[idx];
+					line += char;
+					let nextChar = charList[idx + 1];
+					let nextSenStart = charList[idx + 2];
+					if (nextChar && nextSenStart) {
+						let nextIsCap = nextChar.toLowerCase() !== nextChar;
+						let nextSenIsCap = nextSenStart.toLowerCase() !== nextSenStart;
+						let isPeriod = char === '.';
+						let hasSpace = nextChar === ' ';
+						if (isPeriod && hasSpace && nextSenIsCap) {
+							lines.push(line);
+							line = '';
+							idx++;
+						} else if (isPeriod && nextIsCap) {
+							//lines.push(line);
+							//line = '';
+						}
+					}
+				}
+
+				let docs = lines.map((line) => {
+					let original = line;
+					let index = fullText.indexOf(line);
+					let cleaned = line.split(' ').map((word) => {
+						return cleanString(word, '').toLowerCase();
+					});
+					return {
+						cleaned: cleaned,
+						original: original,
+						index: index
+					}
+				}).map((item, idx) => {
+					return {
+						id: idx + '',
+						sentence: item.cleaned,
+						original: item.original,
+						index: item.index,
+						cluster: null
+					}
+				});
+
+				//console.log(docs);
+
+				// Initialize Clusters
+				let currentMap = {};
+				let leaders = {};
+				for (let k = 0; k < kLimit; k++) {
+					let ki = k + '';
+					docs[k].cluster = ki;
+					leaders[ki] = true;
+					currentMap[ki] = {
+						centroid: docs[k],
+						members: []
+					}
+					currentMap[ki].members.push(docs[k]);
+				}
+
+				// Recompute Clusters
+				let centroidsChanged = true;
+				let counter = 0;
+				while (centroidsChanged) {
+					// Put every other document in a cluster
+					docs = docs.map((doc) => {
+
+						let closestSim = Infinity;
+						for (let ckey in currentMap) {
+							let centroid = currentMap[ckey].centroid;
+							let sim = getSimilarity(centroid.sentence, doc.sentence);
+							if (sim < closestSim) {
+								closestSim = sim;
+								doc.cluster = ckey;
+							}
+						}
+
+						return doc;
+
+					});
+
+					let run = 0;
+					docs.forEach((doc) => {
+						run++;
+						if (doc.id in leaders) {
+							//console.log(doc, 'is a leader')
+						} else {
+							currentMap[doc.cluster].members.push(doc); // Dubious line
+						}
+					});
+					//console.log('run', run)
+
+					// Choose new centroid for each cluster
+					// Check if centroids changed
+					// Update cluster map
+					centroidsChanged = false;
+					leaders = {};
+					for (let ckey in currentMap) {
+						let cluster = currentMap[ckey];
+						let oldCentroid = cluster.centroid;
+						let membersSorted = cluster.members.map((doc) => {
+							let sumSquares = 0;
+							cluster.members.forEach((neigh) => {
+								let sim = getSimilarity(doc.sentence, neigh.sentence);
+								sumSquares += Math.pow(sim, 2);	
+							});
+							return {
+								doc: doc,
+								score: sumSquares
+							}
+						}).sort((a, b) => {
+							return a.score - b.score;
+						});
+						if (!membersSorted[0]) {
+							console.error(`Danger: Could not pick centroid for cluster ${ckey}, members: ${cluster.members.length}`);
+						}
+						let newCentroid = membersSorted[0].doc;
+						newCentroid.cluster = ckey;
+						leaders[newCentroid.id] = true;
+						currentMap[ckey].centroid = newCentroid;
+						if (newCentroid.id !== oldCentroid.id) {
+							centroidsChanged = true;
+						}
+					}
+
+					if (centroidsChanged) {
+						for (let ckey in currentMap) {
+							currentMap[ckey].members = [currentMap[ckey].centroid];
+						}
+					}
+
+					counter++;
+					console.log(counter)
+					
+				}
+
+				//console.log(`Clustered in ${counter} moves.`);
+				//console.log(currentMap)
+				let total = 0;
+				for (let ckey in currentMap) {
+					total += currentMap[ckey].members.length;
+				}
+				if (total !== docs.length) {
+					console.error('More members than documents.');
+				}
+				//console.log(`Total: ${total}`);
+
+				return currentMap;
+
+			}
+
+			function renderComicSummary(comic) {
+				let html = ``;
+				comic.sentences.forEach((s, i) => {
+					html += `<p class="subtitle is-6">${s.order}. [${s.index}] ${s.content}</p><hr>`;
+				});
+				let div = document.createElement('div');
+					div.innerHTML = html;
+				return div;
+			}
+
+			let r2 = document.getElementById('r2');
+			let r3 = document.getElementById('r3');
+
+			getSampleComic().then((comic) => {
+
+				r1.appendChild(renderComicSummary(comic));
+
+				let jc = cluster(comic, {
+					k: 6,
+					getSimilarity: getJaccardSimilarity
+				});
+				console.log(jc);
+
+				let sentences = [];
+				for (let ckey in jc) {
+					let sentence = jc[ckey].centroid.original;
+					let index = jc[ckey].centroid.index;
+					sentences.push({
+						content: sentence,
+						index: index,
+						order: sentences.length + 1
+					});
+				}
+				sentences.sort((a, b) => {
+					return a.index - b.index;
+				}).forEach((s, i) => {
+					console.log(`${i + 1}. [${s.index}] ${s.content}`);
+				});
+
+				r2.appendChild(renderComicSummary({
+					sentences: sentences
+				}));
+
+				let sc = cluster(comic, {
+					k: 6,
+					getSimilarity: getSubjectSimilarity
+				});
+				console.log(sc);
+
+				let sentences2 = [];
+				for (let ckey in sc) {
+					let sentence = sc[ckey].centroid.original;
+					let index = sc[ckey].centroid.index;
+					sentences2.push({
+						content: sentence,
+						index: index,
+						order: sentences2.length + 1
+					});
+				}
+				sentences2.sort((a, b) => {
+					return a.index - b.index;
+				}).forEach((s, i) => {
+					console.log(`${i + 1}. [${s.index}] ${s.content}`);
+				});
+
+				r3.appendChild(renderComicSummary({
+					sentences: sentences2
+				}));
+
+				/*let sc = cluster(comic, {
+					k: 6,
+					getSimilarity: getShinglesSimilarity
+				});
+				console.log(sc);*/
+
+			});
+
+
+	</script>
+
+</body>
+</html>

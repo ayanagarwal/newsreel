@@ -1,0 +1,36 @@
+{
+  "name": "Newsreel",
+  "version": "1.2.1",
+  "manifest_version": 2,
+  "description": "View news as comics.",
+  "homepage_url": "https://comics.news",
+  "author": "Ayan, Nick, and Vinesh",
+  "content_security_policy": "script-src 'unsafe-eval' 'self' https://cdn.firebase.com https://*.firebaseio.com https://vingkan.github.io/*; object-src 'self'",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "page": "src/bg/background.html",
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "browser action",
+    "default_popup": "src/browser_action/browser_action.html"
+  },
+  "permissions": [
+    "notifications",
+    "storage",
+    "background",
+    "tabs"
+  ],
+  "short_name": "News Strips",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/browser_action/contentscripts.js"]
+    }
+  ]
+}
