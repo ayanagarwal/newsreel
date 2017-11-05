@@ -126,3 +126,8 @@ def _images_get_all_items(page, limit):
 			if (len(items) > limit):
 				break
 	return items
+
+
+
+if __name__ == "__main__":
+  app.run()
