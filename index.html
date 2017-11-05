@@ -270,14 +270,14 @@
 				form.style.display = 'none';
 			});
 
-			//load.addEventListener('click', (e) => {
+			load.addEventListener('click', (e) => {
 				db.ref(`newsreel/comics`).once('value', (snap) => {
 					let val = snap.val();
 					let comics = Object.keys(val).map((key) => val[key]);
 					renderMagazine(comics);
 					form.style.display = 'none';
 				});
-			//});
+			});
 
 		}
 
