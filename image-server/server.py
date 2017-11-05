@@ -33,9 +33,15 @@ def server():
 	content = request.args.get('content')
 	domain = request.args.get('domain')
 	limit = request.args.get('limit')
+	try:
+		limit = int(limit)
+	except:
+		limit = None
 	if (content):
 		print("Getting Image Content")
-		return get_content_url(content)
+		if (limit):
+			return get_content_url(content, limit)
+		return get_content_url(content, 5)
 	elif (domain):
 		print("Getting Domain Articles")
 		if (limit):
@@ -77,13 +83,13 @@ def get_domain_content(domain, limit=10):
 
 
 
-def get_content_url(content):
+def get_content_url(content, limit=5):
 	content = " ".join([x for x in content.split()][:32])
 	search = content.replace(' ','%20')
 	url = 'https://www.google.com/search?q=' + search + '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
 	raw_html = (download_page(url))
 	time.sleep(0.1)
-	items = (_images_get_all_items(raw_html, 5))
+	items = (_images_get_all_items(raw_html, limit))
 	
 	validURL = False
 	k = 0
