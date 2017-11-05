@@ -6,54 +6,57 @@ import socket
 from flask import Flask
 from flask import request
 from flask import jsonify
-try:
+
+version = (3,0)
+cur_version = sys.version_info
+if cur_version >= version: #If the Current Version of Python is 3.0 or above
+	#urllib library for Extracting web pages
+	from urllib.request import Request, urlopen
+	from urllib.request import URLError, HTTPError
 	from urllib.parse import urlparse
-except ImportError:
+else: #If the Current Version of Python is 2.x
+	#urllib library for Extracting web pages
+	from urllib2 import Request, urlopen
+	from urllib2 import URLError, HTTPError
 	from urlparse import urlparse
 
+
+
 app = Flask(__name__)
+
+
 
 @app.route('/')
 def server():
 	t0 = time.time()   #start the timer
 	content = request.args.get('content')
-
 	if (content):
-		content = " ".join([x for x in content.split()][:32])
+		return get_content_url(content)
 
-		search = content.replace(' ','%20')
-		url = 'https://www.google.com/search?q=' + search + '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
-		raw_html = (download_page(url))
-		time.sleep(0.1)
-		items = (_images_get_all_items(raw_html, 5))
+	return ''
 
-		version = (3,0)
-		cur_version = sys.version_info
-		if cur_version >= version: #If the Current Version of Python is 3.0 or above
-			#urllib library for Extracting web pages
-			from urllib.request import Request, urlopen
-			from urllib.request import URLError, HTTPError
 
-		else: #If the Current Version of Python is 2.x
-			#urllib library for Extracting web pages
-			from urllib2 import Request, urlopen
-			from urllib2 import URLError, HTTPError
-		
-		validURL = False
-		k = 0
-		while(k < len(items)):
-				validURL = domain_check(items[k])
-				if (validURL):
-					break
-				k+=1
-		
-		# if (content):
-		if (items):
-			return jsonify({'url':items[k]})
-		else:
-			return ''
+
+def get_content_url(content):
+	content = " ".join([x for x in content.split()][:32])
+	search = content.replace(' ','%20')
+	url = 'https://www.google.com/search?q=' + search + '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+	raw_html = (download_page(url))
+	time.sleep(0.1)
+	items = (_images_get_all_items(raw_html, 5))
+	
+	validURL = False
+	k = 0
+	while(k < len(items)):
+			validURL = domain_check(items[k])
+			if (validURL):
+				break
+			k+=1
+	
+	if (items):
+		return jsonify({'url':items[k]})
 	else:
-		return ''
+		return jsonify({'url':''})
 
 
 
