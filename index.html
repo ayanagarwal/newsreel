@@ -166,7 +166,8 @@
 		}
 
 		.min-margin-top .button {
-			margin-top: 20px;
+			margin-top: 15px;
+			margin-bottom: 15px;
 		}
 
 	</style>
@@ -221,6 +222,9 @@
 				<a href="./#/the-wall-street-journal" class="button is-source">
 					<img src="https://icons.better-idea.org/icon?url=http://www.wsj.com&size=70..120..200">
 				</a>
+				<a href="./#/newsreel" class="button is-source">
+					<img src="./favicon.png">
+				</a>
 				<hr>
 				<p class="subtitle is-6 has-text-right">Powered by <a href="https://newsapi.org/" class="tag">News API</a></p>
 			</div>
@@ -229,7 +233,12 @@
 
 	<section class="section min-margin-top">
 		<div class="container">
-			<a href="./#/" class="button is-info is-outlined">Home</a>
+			<a href="./#/" class="button is-info is-outlined">
+				<span class="icon">
+					<i class="fa fa-arrow-left"></i>
+				</span>
+				<span>Home</span>
+			</a>
 			<div id="magazine-holder"></div>
 		</div>
 	</section>
@@ -397,7 +406,16 @@
 				},
 
 				'/:source': (source) => {
-					showSource(source);
+					if (source === 'newsreel') {
+						let loader = document.getElementById('choose');
+						db.ref(`newsreel/comics`).once('value', (snap) => {
+							let val = snap.val();
+							let comics = Object.keys(val).map((key) => val[key]);
+							renderMagazine(comics, loader);
+						});
+					} else {
+						showSource(source);
+					}
 				}
 
 			}
