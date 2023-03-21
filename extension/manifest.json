@@ -1,9 +1,9 @@
 {
   "name": "Newsreel",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "manifest_version": 2,
   "description": "View news as comics.",
-  "homepage_url": "https://comics.news",
+  "homepage_url": "https://ayanagarwal.github.io/newsreel/#/",
   "author": "Ayan, Nick, and Vinesh",
   "content_security_policy": "script-src 'unsafe-eval' 'self' https://cdn.firebase.com https://*.firebaseio.com https://vingkan.github.io/*; object-src 'self'",
   "icons": {
